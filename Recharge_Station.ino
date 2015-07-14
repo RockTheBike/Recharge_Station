@@ -37,6 +37,7 @@ int dangerState = STATE_OFF;
 int blinkState = 0;
 int fastBlinkState = 0;
 int lastLedLevel = 0; // for LED strip hysteresis
+int nowLedLevel = 0; // for LED strip
 #define LEDLEVELHYSTERESIS 0.6 // how many volts of hysteresis for gas gauge
 
 #define VOLTCOEFF 13.179  // larger number interprets as lower voltage
@@ -157,33 +158,32 @@ void doBlink(){
 
 void doLeds(){
 
-  int nowLedLevel;
   nowLedLevel = 0; // init value for this round
-  for(i = 0; i < NUM_LEDS; i++) { // go through all voltages in ledLevels[]
+  for(i = 0; i < NUM_LEDS; i++) { // go through all but the last voltage in ledLevels[]
     if (volts < ledLevels[0]) { // if voltage below minimum
       ledStrip.setPixelColor(i,dark);  // all lights out
-    } else if (volts > ledLevels[NUM_LEDS-1]) { // if voltage beyond highest level
+    } else if (volts > ledLevels[NUM_LEDS]) { // if voltage beyond highest level
       if (blinkState) { // make the lights blink
         ledStrip.setPixelColor(i,white);  // blinking white
       } else {
         ledStrip.setPixelColor(i,dark);  // blinking dark
       }
     } else { // voltage somewhere in between
-      ledStrip.setPixelColor(i,red);  // otherwise red
-      if (volts > ledLevels[i+1]) { // but if enough voltage
+      ledStrip.setPixelColor(i,dark);  // otherwise dark
+      if (volts > ledLevels[i]) { // but if enough voltage
         nowLedLevel = i; // store what level we light up to
       }
     }
   }
 
   if (nowLedLevel > 0) { // gas gauge in effect
-    if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel+2]) && (lastLedLevel == nowLedLevel+1)) {
+    if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel+1]) && (lastLedLevel == nowLedLevel+1)) {
         nowLedLevel = lastLedLevel;
       } else {
         lastLedLevel = nowLedLevel;
       }
-    for(i = 0; i < nowLedLevel; i++) {
-      ledStrip.setPixelColor(i,blue); // gas gauge effect
+    for(i = 0; i < nowLedLevel+1; i++) {
+      ledStrip.setPixelColor(i,gasGaugeColor(i)); // gas gauge effect
     }
   } else {
   lastLedLevel = 0; // don't confuse the hysteresis
@@ -201,6 +201,14 @@ void doLeds(){
 
   ledStrip.show(); // actually update the LED strip
 } // END doLeds()
+
+uint32_t gasGaugeColor(int ledNum) {
+  if (ledNum < 5) {
+    return red;
+  } else if (ledNum < 20) {
+    return blue;
+  } else return white;
+}
 
 void getAmps(){
   ampsAdc = analogRead(AMPSPIN);
@@ -260,6 +268,8 @@ void printDisplay(){
   //  Serial.print(amps);
   //  Serial.print(", va: ");
   //  Serial.print(watts);
-  Serial.print(") lastLedLevel ");
+  Serial.print(") nowLedLevel: ");
+  Serial.print(nowLedLevel);
+  Serial.print("  lastLedLevel: ");
   Serial.println(lastLedLevel);
 }
