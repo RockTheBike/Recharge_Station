@@ -15,7 +15,7 @@ Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + 
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_LEDS+1] = {
-  10,  9, 10, 11.2, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28 };
+  8,  9, 10, 11.2, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
@@ -171,18 +171,18 @@ void doLeds(){
     } else { // voltage somewhere in between
       ledStrip.setPixelColor(i,dark);  // otherwise dark
       if (volts > ledLevels[i]) { // but if enough voltage
-        nowLedLevel = i; // store what level we light up to
+        nowLedLevel = i+1; // store what level we light up to
       }
     }
   }
 
   if (nowLedLevel > 0) { // gas gauge in effect
-    if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel+1]) && (lastLedLevel == nowLedLevel+1)) {
+    if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel]) && (lastLedLevel == nowLedLevel+1)) {
         nowLedLevel = lastLedLevel;
       } else {
         lastLedLevel = nowLedLevel;
       }
-    for(i = 0; i < nowLedLevel+1; i++) {
+    for(i = 0; i < nowLedLevel; i++) {
       ledStrip.setPixelColor(i,gasGaugeColor(i)); // gas gauge effect
     }
   } else {
