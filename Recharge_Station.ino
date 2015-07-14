@@ -36,6 +36,8 @@ int dangerState = STATE_OFF;
 
 int blinkState = 0;
 int fastBlinkState = 0;
+int lastLedLevel = 0; // for LED strip hysteresis
+#define LEDLEVELHYSTERESIS 0.6 // how many volts of hysteresis for gas gauge
 
 #define VOLTCOEFF 13.179  // larger number interprets as lower voltage
 
@@ -155,6 +157,8 @@ void doBlink(){
 
 void doLeds(){
 
+  int nowLedLevel;
+  nowLedLevel = 0; // init value for this round
   for(i = 0; i < NUM_LEDS; i++) { // go through all voltages in ledLevels[]
     if (volts < ledLevels[0]) { // if voltage below minimum
       ledStrip.setPixelColor(i,dark);  // all lights out
@@ -167,9 +171,22 @@ void doLeds(){
     } else { // voltage somewhere in between
       ledStrip.setPixelColor(i,red);  // otherwise red
       if (volts > ledLevels[i+1]) { // but if enough voltage
-        ledStrip.setPixelColor(i,blue);  // gas gauge effect
+        nowLedLevel = i; // store what level we light up to
       }
     }
+  }
+
+  if (nowLedLevel > 0) { // gas gauge in effect
+    if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel+2]) && (lastLedLevel == nowLedLevel+1)) {
+        nowLedLevel = lastLedLevel;
+      } else {
+        lastLedLevel = nowLedLevel;
+      }
+    for(i = 0; i < nowLedLevel; i++) {
+      ledStrip.setPixelColor(i,blue); // gas gauge effect
+    }
+  } else {
+  lastLedLevel = 0; // don't confuse the hysteresis
   }
 
   if (dangerState){ // in danger fastblink white
@@ -243,5 +260,6 @@ void printDisplay(){
   //  Serial.print(amps);
   //  Serial.print(", va: ");
   //  Serial.print(watts);
-  Serial.println(")");
+  Serial.print(") lastLedLevel ");
+  Serial.println(lastLedLevel);
 }
