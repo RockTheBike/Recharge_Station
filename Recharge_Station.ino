@@ -15,7 +15,7 @@ Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + 
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_LEDS+1] = {
-  10,  9, 10, 11.2, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };
+  10,  9, 10, 11.2, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
@@ -27,7 +27,7 @@ const float ledLevels[NUM_LEDS+1] = {
 #define STATE_BLINKFAST 3
 #define STATE_ON 2
 
-#define MAX_VOLTS 28  // when to open the safety relay
+#define MAX_VOLTS 29  // when to open the safety relay
 #define RECOVERY_VOLTS 25  // when to close the safety relay
 int relayState = STATE_OFF;
 
