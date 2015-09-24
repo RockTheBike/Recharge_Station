@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "Recharge_station which allows up to 29.0V down to 7V for 10 USB ports branch:master";
+char versionStr[] = "Recharge_station which allows up to 29.0V down to 7V for 10 USB ports branch:easypedal";
 
 #include <Adafruit_NeoPixel.h>
 #define LEDSTRIPPIN 13 // what pin the data input to the LED strip is connected to
@@ -10,8 +10,16 @@ Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + 
 
 // PINS
 #define RELAYPIN 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
+#define RELAY_CONTROLPIN 4 // relay override inhibitor transistor
 #define VOLTPIN A0 // Voltage Sensor Pin
+#define UCAPVOLTPIN A1 // Voltage Sensor Pin for ultracap_minus
 #define AMPSPIN A3 // Current Sensor Pin
+#define BUCKPIN  9 // Transistors connecting ultracap_minus to ground
+
+#define BUCK_BEGIN 10.0 // voltage at which to start charging ultracaps
+#define BUCK_FULL  20.0 // voltage at which we enable full connection to ultracaps
+#define BUCK_PWMJUMP 5  // PWM value difference worthy of updating analogWrite
+int lastBuckPWM = 0; // remember the last analogWrite we made
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_LEDS+1] = {
@@ -19,6 +27,7 @@ const float ledLevels[NUM_LEDS+1] = {
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
+#define DOBUCK_INTERVAL 1000 // how often to update buck converter PWM
 #define BLINK_PERIOD 600
 #define FAST_BLINK_PERIOD 150
 
@@ -45,6 +54,9 @@ int nowLedLevel = 0; // for LED strip
 int voltsAdc = 0;
 float voltsAdcAvg = 0;
 float volts = 0;
+int ucapVoltsAdc = 0;
+float ucapVoltsAdcAvg = 0;
+float ucapVolts = 0;
 
 //Current related variables
 int ampsAdc = 0;
@@ -59,6 +71,7 @@ unsigned long time = 0;
 unsigned long timeFastBlink = 0;
 unsigned long timeBlink = 0;
 unsigned long timeDisplay = 0;
+unsigned long timeDoBuck = 0;
 unsigned long wattHourTimer = 0;
 
 // var for looping through arrays
@@ -76,6 +89,7 @@ void setup() {
   Serial.println(versionStr);
 
   pinMode(RELAYPIN, OUTPUT);
+  pinMode(BUCKPIN, OUTPUT);
 
   ledStrip.begin(); // initialize the addressible LEDs
   ledStrip.show(); // clear their state
@@ -87,11 +101,16 @@ void setup() {
   dark = ledStrip.Color(0,0,0);
 
   timeDisplay = millis();
+  printDisplay();
 }
 
 void loop() {
   time = millis();
   getVolts();
+  if(time - timeDoBuck > DOBUCK_INTERVAL ){
+    doBuck();
+    timeDoBuck = time;
+  }
   doSafety();
   //  getAmps();  // only if we have a current sensor
   //  calcWatts(); // also adds in knob value for extra wattage, unless commented out
@@ -114,7 +133,37 @@ void loop() {
 
 }
 
+void doBuck() {
+  if (volts < BUCK_BEGIN) { // if pedaller isn't pedalling fast enough
+    digitalWrite(BUCKPIN,LOW); // don't charge ultracaps at all
+    if (lastBuckPWM != 0) Serial.println("LOW");
+    lastBuckPWM = 0; // this was an analogWrite of 0
+  } else {
+    byte targetBuckPWM = (byte)constrain((255.0 * ( 1.0 - (float)(BUCK_FULL-volts) / (float)(BUCK_FULL-BUCK_BEGIN) ) ), 0, 255);
+    if ((targetBuckPWM == 255) && (lastBuckPWM != targetBuckPWM)) {
+      digitalWrite(BUCKPIN,HIGH);
+      lastBuckPWM = 255;
+      Serial.println("HIGH");
+    }
+    if (abs(targetBuckPWM - lastBuckPWM) > BUCK_PWMJUMP) { // if we need a different PWM value
+      Serial.println(targetBuckPWM);
+      analogWrite(BUCKPIN,targetBuckPWM);
+      lastBuckPWM = targetBuckPWM; // we wrote this value
+    }
+  }
+}
+
 void doSafety() {
+  if (volts > 5) {
+    pinMode(RELAY_CONTROLPIN,OUTPUT); // we control relay now
+    pinMode(RELAYPIN,OUTPUT); // we control relay now
+    digitalWrite(RELAY_CONTROLPIN,HIGH); // we control relay now
+    digitalWrite(RELAYPIN,LOW); // we control relay now
+  } else {
+    pinMode(RELAY_CONTROLPIN,INPUT); // voltage too low to control relay
+    pinMode(RELAYPIN,INPUT);
+  }
+
   if (volts > MAX_VOLTS){
     digitalWrite(RELAYPIN, HIGH);
     relayState = STATE_ON;
@@ -160,9 +209,9 @@ void doLeds(){
 
   nowLedLevel = 0; // init value for this round
   for(i = 0; i < NUM_LEDS; i++) { // go through all but the last voltage in ledLevels[]
-    if (volts < ledLevels[0]) { // if voltage below minimum
+    if (ucapVolts < ledLevels[0]) { // if voltage below minimum
       ledStrip.setPixelColor(i,dark);  // all lights out
-    } else if (volts > ledLevels[NUM_LEDS]) { // if voltage beyond highest level
+    } else if (ucapVolts > ledLevels[NUM_LEDS]) { // if voltage beyond highest level
       if (blinkState) { // make the lights blink
         ledStrip.setPixelColor(i,white);  // blinking white
       } else {
@@ -170,14 +219,14 @@ void doLeds(){
       }
     } else { // voltage somewhere in between
       ledStrip.setPixelColor(i,dark);  // otherwise dark
-      if (volts > ledLevels[i]) { // but if enough voltage
+      if (ucapVolts > ledLevels[i]) { // but if enough voltage
         nowLedLevel = i+1; // store what level we light up to
       }
     }
   }
 
   if (nowLedLevel > 0) { // gas gauge in effect
-    if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel]) && (lastLedLevel == nowLedLevel+1)) {
+    if ((ucapVolts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel]) && (lastLedLevel == nowLedLevel+1)) {
         nowLedLevel = lastLedLevel;
       } else {
         lastLedLevel = nowLedLevel;
@@ -220,6 +269,10 @@ void getVolts(){
   voltsAdc = analogRead(VOLTPIN);
   voltsAdcAvg = average(voltsAdc, voltsAdcAvg);
   volts = adc2volts(voltsAdcAvg);
+
+  ucapVoltsAdc = analogRead(UCAPVOLTPIN);
+  ucapVoltsAdcAvg = average(ucapVoltsAdc, ucapVoltsAdcAvg);
+  ucapVolts = volts - adc2volts(ucapVoltsAdcAvg); // we measured the ultracap_minus voltage
 }
 
 float average(float val, float avg){
@@ -264,11 +317,17 @@ void printDisplay(){
   Serial.print(volts);
   Serial.print("v (");
   Serial.print(analogRead(VOLTPIN));
+  Serial.print(")  ucap:");
+  Serial.print(ucapVolts);
+  Serial.print("v (");
+  Serial.print(analogRead(UCAPVOLTPIN));
+  Serial.print(")  PWM:");
+  Serial.print(lastBuckPWM);
   //  Serial.print(", a: ");
   //  Serial.print(amps);
   //  Serial.print(", va: ");
   //  Serial.print(watts);
-  Serial.print(") nowLedLevel: ");
+  Serial.print("  nowLedLevel: ");
   Serial.print(nowLedLevel);
   Serial.print("  lastLedLevel: ");
   Serial.println(lastLedLevel);
