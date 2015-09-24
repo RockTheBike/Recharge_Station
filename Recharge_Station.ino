@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "onebike-10usb which allows up to 27.0V down to 7V for 10 USB ports branch:1b10usb";
+char versionStr[] = "Recharge_station which allows up to 29.0V down to 7V for 10 USB ports branch:master";
 
 #include <Adafruit_NeoPixel.h>
 #define LEDSTRIPPIN 13 // what pin the data input to the LED strip is connected to
