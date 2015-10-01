@@ -27,7 +27,6 @@ const float ledLevels[NUM_LEDS+1] = {
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
-#define DOBUCK_INTERVAL 1000 // how often to update buck converter PWM
 #define BLINK_PERIOD 600
 #define FAST_BLINK_PERIOD 150
 
@@ -71,7 +70,6 @@ unsigned long time = 0;
 unsigned long timeFastBlink = 0;
 unsigned long timeBlink = 0;
 unsigned long timeDisplay = 0;
-unsigned long timeDoBuck = 0;
 unsigned long wattHourTimer = 0;
 
 // var for looping through arrays
@@ -107,10 +105,7 @@ void setup() {
 void loop() {
   time = millis();
   getVolts();
-  if(time - timeDoBuck > DOBUCK_INTERVAL ){
-    doBuck();
-    timeDoBuck = time;
-  }
+  doBuck();
   doSafety();
   //  getAmps();  // only if we have a current sensor
   //  calcWatts(); // also adds in knob value for extra wattage, unless commented out
