@@ -16,6 +16,7 @@ Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + 
 #define AMPSPIN A3 // Current Sensor Pin
 #define BUCKPIN  9 // Transistors connecting ultracap_minus to ground
 
+#define BUCK_MINIMUM 16 // minimum PWM value at all times
 #define BUCK_BEGIN 10.0 // voltage at which to start charging ultracaps
 #define BUCK_FULL  20.0 // voltage at which we enable full connection to ultracaps
 #define BUCK_PWMJUMP 5  // PWM value difference worthy of updating analogWrite
@@ -131,15 +132,19 @@ void loop() {
 
 void doBuck() {
   if (volts < BUCK_BEGIN) { // if pedaller isn't pedalling fast enough
-    digitalWrite(BUCKPIN,LOW); // don't charge ultracaps at all
-    if (lastBuckPWM != 0) Serial.println("LOW");
-    lastBuckPWM = 0; // this was an analogWrite of 0
+    analogWrite(BUCKPIN,BUCK_MINIMUM);
+    if (lastBuckPWM != BUCK_MINIMUM) {
+      Serial.print("BUCK_MINIMUM");
+      printDisplay();
+    }
+    lastBuckPWM = BUCK_MINIMUM;
   } else {
-    byte targetBuckPWM = (byte)constrain((255.0 * ( 1.0 - (float)(BUCK_FULL-volts) / (float)(BUCK_FULL-BUCK_BEGIN) ) ), 0, 255);
+    byte targetBuckPWM = (byte)constrain( ((255.0 - BUCK_MINIMUM) * ( 1.0 - (float)(BUCK_FULL-volts) / (float)(BUCK_FULL-BUCK_BEGIN) ) ) + BUCK_MINIMUM , BUCK_MINIMUM, 255);
     if ((targetBuckPWM == 255) && (lastBuckPWM != targetBuckPWM)) {
+      Serial.print("HIGH");
+      printDisplay();
       digitalWrite(BUCKPIN,HIGH);
       lastBuckPWM = 255;
-      Serial.println("HIGH");
     }
     if (abs(targetBuckPWM - lastBuckPWM) > BUCK_PWMJUMP) { // if we need a different PWM value
       Serial.println(targetBuckPWM);
