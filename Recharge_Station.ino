@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "Recharge_station which allows up to 29.0V down to 7V for 10 USB ports branch:master";
+char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 10 USB ports branch:dropstop";
 
 #include <Adafruit_NeoPixel.h>
 #define LEDSTRIPPIN 13 // what pin the data input to the LED strip is connected to
@@ -8,8 +8,10 @@ char versionStr[] = "Recharge_station which allows up to 29.0V down to 7V for 10
 Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + NEO_KHZ800);
 #define ledBrightness 127 // brightness of addressible LEDs (0 to 255)
 
-// PINS
-#define RELAYPIN 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
+#define VOLTS_CUTOUT 10 // disconnect from the ultracaps below this voltage
+#define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
+#define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
+#define CAPSRELAY 4 // relay override inhibitor transistor
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
 
@@ -75,7 +77,8 @@ void setup() {
 
   Serial.println(versionStr);
 
-  pinMode(RELAYPIN, OUTPUT);
+  pinMode(DISCORELAY, OUTPUT);
+  pinMode(CAPSRELAY,OUTPUT);
 
   ledStrip.begin(); // initialize the addressible LEDs
   ledStrip.show(); // clear their state
@@ -87,6 +90,7 @@ void setup() {
   dark = ledStrip.Color(0,0,0);
 
   timeDisplay = millis();
+  printDisplay();
 }
 
 void loop() {
@@ -115,13 +119,20 @@ void loop() {
 }
 
 void doSafety() {
+  if (volts > VOLTS_CUTIN) {
+    digitalWrite(CAPSRELAY,HIGH);
+  } else if (volts < VOLTS_CUTOUT) {
+    digitalWrite(CAPSRELAY,LOW); // let the cap stay charged
+    // nothing happens here because we shut off our own power
+  }
+
   if (volts > MAX_VOLTS){
-    digitalWrite(RELAYPIN, HIGH);
+    digitalWrite(DISCORELAY, HIGH);
     relayState = STATE_ON;
   }
 
   if (relayState == STATE_ON && volts < RECOVERY_VOLTS){
-    digitalWrite(RELAYPIN, LOW);
+    digitalWrite(DISCORELAY, LOW);
     relayState = STATE_OFF;
   }
 
