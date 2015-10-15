@@ -11,7 +11,7 @@ Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + 
 #define VOLTS_CUTOUT 10 // disconnect from the ultracaps below this voltage
 #define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
 #define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
-#define CAPSRELAY 4 // relay override inhibitor transistor
+#define CAPSRELAY 3 // relay override inhibitor transistor
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
 
