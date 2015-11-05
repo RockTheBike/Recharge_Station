@@ -10,10 +10,13 @@ Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIPPIN, NEO_GRB + 
 
 #define VOLTS_CUTOUT 10 // disconnect from the ultracaps below this voltage
 #define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
-#define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
-#define CAPSRELAY 3 // relay override inhibitor transistor
+#define DISCORELAY 2 // cutoff relay pin (this relay is resistored fro MAX_VOLTS)
+#define CAPSRELAY 3 // this relay connects us to the ultracap
+#define CAPSRELAY_VOLTAGE 24 // above this voltage, we PWM the relay pin
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
+#define BUCK_PWMJUMP 5  // PWM value difference worthy of updating analogWrite
+int lastBuckPWM = 0; // remember the last analogWrite we made
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_LEDS+1] = {
@@ -79,6 +82,7 @@ void setup() {
 
   pinMode(DISCORELAY, OUTPUT);
   pinMode(CAPSRELAY,OUTPUT);
+  setPwmFrequency(CAPSRELAY,1); // set capsrelay PWM frequency to 31250 Hz
 
   ledStrip.begin(); // initialize the addressible LEDs
   ledStrip.show(); // clear their state
@@ -118,9 +122,23 @@ void loop() {
 
 }
 
+void doCapsRelay() {
+  if (volts <= CAPSRELAY_VOLTAGE) { // if voltage is within spec for the relay
+    digitalWrite(CAPSRELAY,HIGH); // turn on caps relay without PWM
+    lastBuckPWM = 255;
+  } else {
+    byte targetBuckPWM = (byte)((float)CAPSRELAY_VOLTAGE / volts * 255.0);
+    if (abs(targetBuckPWM - lastBuckPWM) > BUCK_PWMJUMP) { // if we need a different PWM value
+      Serial.println(targetBuckPWM);
+      analogWrite(CAPSRELAY,targetBuckPWM);
+      lastBuckPWM = targetBuckPWM; // we wrote this value
+    }
+  }
+}
+
 void doSafety() {
   if (volts > VOLTS_CUTIN) {
-    digitalWrite(CAPSRELAY,HIGH);
+    doCapsRelay(); // protect capsrelay from higher voltage
   } else if (volts < VOLTS_CUTOUT) {
     digitalWrite(CAPSRELAY,LOW); // let the cap stay charged
     // nothing happens here because we shut off our own power
@@ -283,4 +301,63 @@ void printDisplay(){
   Serial.print(nowLedLevel);
   Serial.print("  lastLedLevel: ");
   Serial.println(lastLedLevel);
+}
+
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+    switch(divisor) {
+    case 1:
+      mode = 0x01;
+      break;
+    case 8:
+      mode = 0x02;
+      break;
+    case 64:
+      mode = 0x03;
+      break;
+    case 256:
+      mode = 0x04;
+      break;
+    case 1024:
+      mode = 0x05;
+      break;
+    default:
+      return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    }
+    else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  }
+  else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+    case 1:  // 31250 Hz
+      mode = 0x01;
+      break;
+    case 8: // 3906.25 Hz
+      mode = 0x02;
+      break;
+    case 32:
+      mode = 0x03;
+      break;
+    case 64:  // 488.28125 Hz
+      mode = 0x04;
+      break;
+    case 128:
+      mode = 0x05;
+      break;
+    case 256:
+      mode = 0x06;
+      break;
+    case 1024:
+      mode = 0x7;
+      break;
+    default:
+      return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
 }
