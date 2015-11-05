@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 10 USB ports branch:dropstop";
+char versionStr[] = "forked from Recharge-station dropstop, to protectr LEDs at a gig branch:bristolmeyers";
 
 #include <Adafruit_NeoPixel.h>
 #define LEDSTRIPPIN 13 // what pin the data input to the LED strip is connected to
@@ -29,11 +29,11 @@ const float ledLevels[NUM_LEDS+1] = {
 #define STATE_BLINKFAST 3
 #define STATE_ON 2
 
-#define MAX_VOLTS 29  // when to open the safety relay
-#define RECOVERY_VOLTS 25  // when to close the safety relay
+#define MAX_VOLTS 48  // when to open the safety relay
+#define RECOVERY_VOLTS 43  // when to close the safety relay
 int relayState = STATE_OFF;
 
-#define DANGER_VOLTS 30.0  // when to fast-flash white (slow-flash above last ledLevels)
+#define DANGER_VOLTS 50.0  // when to fast-flash white (slow-flash above last ledLevels)
 int dangerState = STATE_OFF;
 
 int blinkState = 0;
