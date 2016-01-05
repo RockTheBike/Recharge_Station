@@ -164,21 +164,21 @@ void loop() {
   }
 
 }
-/*
+
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-uint32_t Wheel(const Adafruit_NeoPixel& strip, byte WheelPos) {
+uint32_t Wheel(byte WheelPos) {
   if (WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, WheelPos * 3, 0);
+    return whatWattStrip.Color(255 - WheelPos * 3, WheelPos * 3, 0);
   } else if (WheelPos < 170) {
     WheelPos -= 85;
-    return strip.Color(0, 255 - WheelPos * 3, WheelPos * 3);
+    return whatWattStrip.Color(0, 255 - WheelPos * 3, WheelPos * 3);
   } else {
     WheelPos -= 170;
-    return strip.Color(WheelPos * 3, 0, 255 - WheelPos * 3);
+    return whatWattStrip.Color(WheelPos * 3, 0, 255 - WheelPos * 3);
   }
 }
-*/
+
 void doIndBlink(){
 
   boolean indBlinkState = (time % (IND_BLINK_INTERVAL * 2) > IND_BLINK_INTERVAL);
@@ -202,7 +202,7 @@ void doIndRamp(){
   ledstolight = logPowerRamp(watts);
   if( ledstolight > NUM_POWER_PIXELS ) ledstolight=NUM_POWER_PIXELS;
   unsigned char hue = ledstolight/NUM_POWER_PIXELS * 170.0;
-  uint32_t color = 5;//Wheel(whatWattStrip, hue<1?1:hue);
+  uint32_t color = Wheel(hue<1?1:hue);
   static const uint32_t dark = Adafruit_NeoPixel::Color(0,0,0);
   doFractionalRamp(0, NUM_POWER_PIXELS, ledstolight, color, dark);
 
