@@ -35,6 +35,7 @@ const float ledLevels[NUM_VOLTLEDS+1] = {
 #define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
 #define ENERGY_INTERVAL 0
 #define IND_INTERVAL 100
+#define BUTTON_CHECK_INTERVAL 100
 #define BLINK_PERIOD 600
 #define FAST_BLINK_PERIOD 150
 
@@ -106,6 +107,7 @@ unsigned long timeFastBlink = 0;
 unsigned long timeBlink = 0;
 unsigned long timeDisplay = 0;
 unsigned long lastEnergy = 0;
+unsigned long lastButtonCheckTime = 0;
 unsigned long lastIndicatorTime = 0;
 int indState = STATE_RAMP;
 
@@ -161,6 +163,11 @@ void loop() {
   if(time - lastIndicatorTime > IND_INTERVAL){
     lastIndicatorTime = time;
     doIndicators();
+  }
+
+  if(time - lastButtonCheckTime > BUTTON_CHECK_INTERVAL){
+    lastButtonCheckTime = time;
+    doButtonCheck();
   }
 
 }
@@ -265,6 +272,16 @@ void doIndicators(){
   } else {
     doIndBlink();
   }
+}
+
+void doButtonCheck() {
+  pinMode( WHATWATTPIN, INPUT_PULLUP );
+  delay(10); // Need some time between pinMode and digitalRead for stuff to settle.
+  if( ! digitalRead(WHATWATTPIN) ) { // button closes data line to ground
+    energy = 0; // reset energy
+    Serial.println("resetEnergy");
+  }
+  whatWattStrip.begin();
 }
 
 // hacky utility to merge colors
