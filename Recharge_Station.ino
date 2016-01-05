@@ -22,6 +22,7 @@ Adafruit_NeoPixel whatWattStrip = Adafruit_NeoPixel(NUM_WHATWATTPIXELS, WHATWATT
 #define CAPSRELAY 3 // relay override inhibitor transistor
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
+#define NOISYZERO 0.2  // assume any smaller measurement should be 0
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_VOLTLEDS+1] = {
@@ -29,6 +30,7 @@ const float ledLevels[NUM_VOLTLEDS+1] = {
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
+#define ENERGY_INTERVAL 0
 #define BLINK_PERIOD 600
 #define FAST_BLINK_PERIOD 150
 
@@ -70,6 +72,7 @@ unsigned long time = 0;
 unsigned long timeFastBlink = 0;
 unsigned long timeBlink = 0;
 unsigned long timeDisplay = 0;
+unsigned long lastEnergy = 0;
 
 // var for looping through arrays
 int i = 0;
@@ -116,6 +119,32 @@ void loop() {
     timeDisplay = time;
   }
 
+  if(time - lastEnergy > ENERGY_INTERVAL){
+    doEnergy();
+  }
+
+}
+
+void doEnergy(){
+  float temp = 0.0;
+
+  float timeDiff = time - lastEnergy;
+  float timeDiffSecs = timeDiff / 1000.0;
+
+  // measure amps and calc energy
+  for(int j = 0; j < 3; j++){
+    ampsRaw = analogRead(AMPSPIN);
+    temp = adc2amps(ampsRaw);
+    amps = averageF(temp, amps);
+  }
+  // we assume anything near or below zero is a reading error
+  if( amps < NOISYZERO ) amps = 0;
+
+  //calc watts and energy
+  watts = volts * amps;
+  float wattsecs = watts * timeDiffSecs;
+  energy += wattsecs; // watt secs
+  lastEnergy = time;
 }
 
 void doSafety() {
@@ -225,6 +254,12 @@ void getVolts(){
   voltsAdc = analogRead(VOLTPIN);
   voltsAdcAvg = average(voltsAdc, voltsAdcAvg);
   volts = adc2volts(voltsAdcAvg);
+}
+
+float averageF(float val, float avg){
+  if(avg == 0)
+    avg = val;
+  return (val + (avg * (AVG_CYCLES - 1))) / AVG_CYCLES;
 }
 
 float average(float val, float avg){
