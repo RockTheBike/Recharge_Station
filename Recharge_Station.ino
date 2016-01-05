@@ -245,12 +245,15 @@ void printDisplay(){
   Serial.print(volts);
   Serial.print("v (");
   Serial.print(analogRead(VOLTPIN));
-  //  Serial.print(", a: ");
-  //  Serial.print(amps);
-  //  Serial.print(", va: ");
-  //  Serial.print(watts);
-  Serial.print(") nowLedLevel: ");
-  Serial.print(nowLedLevel);
-  Serial.print("  lastLedLevel: ");
-  Serial.println(lastLedLevel);
+  Serial.print("  ");
+  Serial.print(amps);
+  Serial.print("A (");
+  Serial.print(ampsRaw);
+  Serial.print(")  ");
+  Serial.print(watts);
+  Serial.print("W  ");
+  Serial.print(energy);
+  Serial.print("Watt secs  ");
+  Serial.print(energy/3600,2);
+  Serial.println("Watt hours");
 }
