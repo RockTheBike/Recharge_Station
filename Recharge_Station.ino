@@ -87,9 +87,9 @@ int lastLedLevel = 0; // for LED strip hysteresis
 int nowLedLevel = 0; // for LED strip
 #define LEDLEVELHYSTERESIS 0.6 // how many volts of hysteresis for gas gauge
 
-#define VOLTCOEFF 13.179  // larger number interprets as lower voltage
-#define AMPCOEFF 8.0682 // 583 - 512 = 71; 71 / 8.8 amps = 8.0682
-#define AMPOFFSET 512.0 // when current sensor is at 0 amps this is the ADC value
+#define VOLTCOEFF 13.74  // larger number interprets as lower voltage
+#define AMPCOEFF 7.9066 // 583 - 512 = 71; 71 / 8.8 amps = 8.0682
+#define AMPOFFSET 510.6 // when current sensor is at 0 amps this is the ADC value
 
 int voltsAdc = 0;
 float voltsAdcAvg = 0;
