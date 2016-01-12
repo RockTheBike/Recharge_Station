@@ -32,7 +32,8 @@ const float ledLevels[NUM_VOLTLEDS+1] = {
   10.2, 10.6, 11.05, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
-#define DISPLAY_INTERVAL 2000 // when auto-display is on, display every this many milli-seconds
+#define OVERSAMPLING 25.0 // analog oversampling
+#define DISPLAY_INTERVAL 250 // when auto-display is on, display every this many milli-seconds
 #define ENERGY_INTERVAL 0
 #define IND_INTERVAL 100
 #define BUTTON_CHECK_INTERVAL 100
@@ -304,17 +305,13 @@ uint32_t weighted_average_of_colors( uint32_t colorA, uint32_t colorB,
 }
 
 void doEnergy(){
-  float temp = 0.0;
-
   float timeDiff = time - lastEnergy;
   float timeDiffSecs = timeDiff / 1000.0;
 
   // measure amps and calc energy
-  for(int j = 0; j < 3; j++){
-    ampsRaw = analogRead(AMPSPIN);
-    temp = adc2amps(ampsRaw);
-    amps = averageF(temp, amps);
-  }
+  ampsRaw = 0; // reset adder
+  for(int j = 0; j < OVERSAMPLING; j++) ampsRaw += analogRead(AMPSPIN) - AMPOFFSET;
+  amps = ((float)ampsRaw / OVERSAMPLING) / AMPCOEFF * -1; // it's negative
   // we assume anything near or below zero is a reading error
   if( amps < NOISYZERO ) amps = 0;
 
@@ -434,12 +431,6 @@ void getVolts(){
   volts = adc2volts(voltsAdcAvg);
 }
 
-float averageF(float val, float avg){
-  if(avg == 0)
-    avg = val;
-  return (val + (avg * (AVG_CYCLES - 1))) / AVG_CYCLES;
-}
-
 float average(float val, float avg){
   if(avg == 0)
     avg = val;
@@ -448,10 +439,6 @@ float average(float val, float avg){
 
 float adc2volts(float adc){
   return adc * (1 / VOLTCOEFF);
-}
-
-float adc2amps(int adc){
-  return - (adc - AMPOFFSET) / AMPCOEFF;
 }
 
 void printDisplay(){
