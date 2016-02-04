@@ -9,8 +9,8 @@ char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 1
 Adafruit_NeoPixel voltLedStrip = Adafruit_NeoPixel(NUM_VOLTLEDS, VOLTLEDSTRIPPIN, NEO_GRB + NEO_KHZ800);
 
 #define WHATWATTPIN 12 // what pin the WhatWatt handlebar pedalometer is connected to
-#define NUM_POWER_PIXELS 7  // number LEDs for power
-#define NUM_ENERGY_PIXELS 7  // number LEDs for energy
+#define NUM_POWER_PIXELS 30  // number LEDs for power
+#define NUM_ENERGY_PIXELS 30  // number LEDs for energy
 #define NUM_WHATWATTPIXELS (NUM_POWER_PIXELS+NUM_ENERGY_PIXELS)  // number LEDs per bike
 Adafruit_NeoPixel whatWattStrip = Adafruit_NeoPixel(NUM_WHATWATTPIXELS, WHATWATTPIN, NEO_GRB + NEO_KHZ800);
 
@@ -98,6 +98,7 @@ float volts = 0;
 //Current related variables
 int ampsRaw = 0;
 float amps = 0;
+int fakeAmpsValue = 0; // for testing purposes
 
 float watts = 0;
 float energy = 0; // watt secs
@@ -147,6 +148,10 @@ void setup() {
 void loop() {
   time = millis();
   getVolts();
+  volts = 25.0; // for testing purposes
+  while (Serial.available() > 0) {
+    fakeAmpsValue = Serial.parseInt(); // for testing purposes
+  }
   doSafety();
 
   doBlink();  // blink the LEDs
@@ -312,6 +317,7 @@ void doEnergy(){
   ampsRaw = 0; // reset adder
   for(int j = 0; j < OVERSAMPLING; j++) ampsRaw += analogRead(AMPSPIN) - AMPOFFSET;
   amps = ((float)ampsRaw / OVERSAMPLING) / AMPCOEFF * -1; // it's negative
+  amps = fakeAmpsValue; // for testing purposes
   // we assume anything near or below zero is a reading error
   if( amps < NOISYZERO ) amps = 0;
 
