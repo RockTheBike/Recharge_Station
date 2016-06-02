@@ -228,6 +228,25 @@ void doIndRamp(){
   whatWattStrip.show();
 }
 
+// hacky utility to merge colors
+// fraction=0 => colorA; fraction=1 => colorB; fraction=0.5 => mix
+// TODO:  but something's backward in the code or my brain!
+// (let's hope Adafruit_NeoPixel doesn't change its encoding of colors)
+uint32_t weighted_average_of_colors( uint32_t colorA, uint32_t colorB,
+  float fraction ){
+  // TODO:  weight brightness to look more linear to the human eye
+  uint8_t RA = (colorA>>16) & 0xff;
+  uint8_t GA = (colorA>>8 ) & 0xff;
+  uint8_t BA = (colorA>>0 ) & 0xff;
+  uint8_t RB = (colorB>>16) & 0xff;
+  uint8_t GB = (colorB>>8 ) & 0xff;
+  uint8_t BB = (colorB>>0 ) & 0xff;
+  return Adafruit_NeoPixel::Color(
+    RA*fraction + RB*(1-fraction),
+    GA*fraction + GB*(1-fraction),
+    BA*fraction + BB*(1-fraction) );
+}
+
 void doFractionalRamp(uint8_t offset, uint8_t num_pixels, float ledstolight, uint32_t firstColor, uint32_t secondColor){
   for( int i=0,pixel=offset; i<=num_pixels; i++,pixel++ ){
     uint32_t color;
@@ -283,25 +302,6 @@ void doButtonCheck() {
     Serial.println("resetEnergy");
   }
   whatWattStrip.begin();
-}
-
-// hacky utility to merge colors
-// fraction=0 => colorA; fraction=1 => colorB; fraction=0.5 => mix
-// TODO:  but something's backward in the code or my brain!
-// (let's hope Adafruit_NeoPixel doesn't change its encoding of colors)
-uint32_t weighted_average_of_colors( uint32_t colorA, uint32_t colorB,
-  float fraction ){
-  // TODO:  weight brightness to look more linear to the human eye
-  uint8_t RA = (colorA>>16) & 0xff;
-  uint8_t GA = (colorA>>8 ) & 0xff;
-  uint8_t BA = (colorA>>0 ) & 0xff;
-  uint8_t RB = (colorB>>16) & 0xff;
-  uint8_t GB = (colorB>>8 ) & 0xff;
-  uint8_t BB = (colorB>>0 ) & 0xff;
-  return Adafruit_NeoPixel::Color(
-    RA*fraction + RB*(1-fraction),
-    GA*fraction + GB*(1-fraction),
-    BA*fraction + BB*(1-fraction) );
 }
 
 void doEnergy(){
