@@ -448,7 +448,7 @@ void printDisplay(){
   Serial.print("  ");
   Serial.print(amps);
   Serial.print("A (");
-  Serial.print(ampsRaw);
+  Serial.print(ampsRaw/OVERSAMPLING);
   Serial.print(")  ");
   Serial.print(watts);
   Serial.print("W  ");
