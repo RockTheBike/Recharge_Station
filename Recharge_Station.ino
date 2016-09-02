@@ -110,6 +110,7 @@ unsigned long timeDisplay = 0;
 unsigned long lastEnergy = 0;
 unsigned long lastButtonCheckTime = 0;
 unsigned long lastIndicatorTime = 0;
+unsigned long riderTime = 0;
 int indState = STATE_RAMP;
 
 // var for looping through arrays
@@ -124,7 +125,8 @@ uint32_t dark; // needs to be initialized with .Color() in setup()
 void setup() {
   Serial.begin(BAUD_RATE);
 
-  Serial.println(versionStr);
+  //Serial.println(versionStr);
+  Serial.println("Wattage, Energy, Time");
 
   pinMode(DISCORELAY, OUTPUT);
   pinMode(CAPSRELAY,OUTPUT);
@@ -141,6 +143,7 @@ void setup() {
   dark = voltLedStrip.Color(0,0,0);
 
   timeDisplay = millis();
+  riderTime = millis();
   printDisplay();
 }
 
@@ -299,7 +302,8 @@ void doButtonCheck() {
   delay(10); // Need some time between pinMode and digitalRead for stuff to settle.
   if( ! digitalRead(WHATWATTPIN) ) { // button closes data line to ground
     energy = 0; // reset energy
-    Serial.println("resetEnergy");
+    riderTime = millis();
+    //Serial.println("resetEnergy");
   }
   whatWattStrip.begin();
 }
@@ -442,18 +446,9 @@ float adc2volts(float adc){
 }
 
 void printDisplay(){
-  Serial.print(volts);
-  Serial.print("v (");
-  Serial.print(analogRead(VOLTPIN));
-  Serial.print("  ");
-  Serial.print(amps);
-  Serial.print("A (");
-  Serial.print(ampsRaw/OVERSAMPLING);
-  Serial.print(")  ");
-  Serial.print(watts);
-  Serial.print("W  ");
-  Serial.print(energy);
-  Serial.print("Watt secs  ");
-  Serial.print(energy/3600,2);
-  Serial.println("Watt hours");
+  Serial.print(watts,0);
+  Serial.print(", ");
+  Serial.print(energy,1);
+  Serial.print(", ");
+  Serial.println((time - riderTime) / 1000);
 }
