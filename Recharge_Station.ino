@@ -88,8 +88,8 @@ int nowLedLevel = 0; // for LED strip
 #define LEDLEVELHYSTERESIS 0.6 // how many volts of hysteresis for gas gauge
 
 #define VOLTCOEFF 13.36  // larger number interprets as lower voltage
-#define AMPCOEFF 9.817 // 583 - 512 = 71; 71 / 8.8 amps = 8.0682
-#define AMPOFFSET 510.6 // when current sensor is at 0 amps this is the ADC value
+#define AMPCOEFF 8.306 // 583 - 512 = 71; 71 / 8.8 amps = 8.0682
+#define AMPOFFSET 508.0 // when current sensor is at 0 amps this is the ADC value
 
 int voltsAdc = 0;
 float voltsAdcAvg = 0;
@@ -446,6 +446,10 @@ float adc2volts(float adc){
 }
 
 void printDisplay(){
+//  Serial.print(((float)ampsRaw / OVERSAMPLING),1);
+//  Serial.print("ampsRaw  ");
+//  Serial.print(amps,1);
+//  Serial.print("amps  ");
   Serial.print(watts,0);
   Serial.print(", ");
   Serial.print(energy,1);
