@@ -8,11 +8,12 @@ char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 1
 #define NUM_VOLTLEDS 22 // how many LEDs on the strip
 Adafruit_NeoPixel voltLedStrip = Adafruit_NeoPixel(NUM_VOLTLEDS, VOLTLEDSTRIPPIN, NEO_GRB + NEO_KHZ800);
 
-#define WHATWATTPIN 12 // what pin the WhatWatt handlebar pedalometer is connected to
-#define NUM_POWER_PIXELS 7  // number LEDs for power
-#define NUM_ENERGY_PIXELS 7  // number LEDs for energy
-#define NUM_WHATWATTPIXELS (NUM_POWER_PIXELS+NUM_ENERGY_PIXELS)  // number LEDs per bike
-Adafruit_NeoPixel whatWattStrip = Adafruit_NeoPixel(NUM_WHATWATTPIXELS, WHATWATTPIN, NEO_GRB + NEO_KHZ800);
+#define POWERLEDPIN 12 // what pin the WhatWatt POWER pedalometer is connected to
+#define ENERGYLEDPIN 11 // what pin the WhatWatt ENERGY pedalometer is connected to
+#define NUM_POWER_PIXELS 17  // number LEDs for power
+#define NUM_ENERGY_PIXELS 17  // number LEDs for energy
+Adafruit_NeoPixel PowerStrip = Adafruit_NeoPixel(NUM_POWER_PIXELS, POWERLEDPIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPIN, NEO_GRB + NEO_KHZ800);
 
 #define IND_BLINK_INTERVAL 300
 #define IND_VOLT_LOW 11 // handlebar pedalometer blinks red
@@ -131,8 +132,10 @@ void setup() {
 
   voltLedStrip.begin(); // initialize the addressible LEDs
   voltLedStrip.show(); // clear their state
-  whatWattStrip.begin(); // initialize the addressible LEDs
-  whatWattStrip.show(); // clear their state
+  EnergyStrip.begin(); // initialize the addressible LEDs
+  EnergyStrip.show(); // clear their state
+  PowerStrip.begin(); // initialize the addressible LEDs
+  PowerStrip.show(); // clear their state
 
   red = voltLedStrip.Color(ledBrightness,0,0); // load these handy Colors
   green = voltLedStrip.Color(0,ledBrightness,0);
@@ -177,28 +180,28 @@ void loop() {
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
   if (WheelPos < 85) {
-    return whatWattStrip.Color(255 - WheelPos * 3, WheelPos * 3, 0);
+    return Adafruit_NeoPixel::Color(255 - WheelPos * 3, WheelPos * 3, 0);
   } else if (WheelPos < 170) {
     WheelPos -= 85;
-    return whatWattStrip.Color(0, 255 - WheelPos * 3, WheelPos * 3);
+    return Adafruit_NeoPixel::Color(0, 255 - WheelPos * 3, WheelPos * 3);
   } else {
     WheelPos -= 170;
-    return whatWattStrip.Color(WheelPos * 3, 0, 255 - WheelPos * 3);
+    return Adafruit_NeoPixel::Color(WheelPos * 3, 0, 255 - WheelPos * 3);
   }
 }
 
-void doIndBlink(){
+void doIndBlink(Adafruit_NeoPixel &strip){
 
   boolean indBlinkState = (time % (IND_BLINK_INTERVAL * 2) > IND_BLINK_INTERVAL);
 
   // turn all pixels off:
   if(!indBlinkState){
-    for (byte i = 0; i < whatWattStrip.numPixels(); i++) whatWattStrip.setPixelColor(i,0,0,0);
+    for (byte i = 0; i < strip.numPixels(); i++) strip.setPixelColor(i,0,0,0);
   } else {
     if(indState == STATE_BLINK_LOW){
-      for (byte i = 0; i < whatWattStrip.numPixels(); i++) whatWattStrip.setPixelColor(i,255,0,0);
+      for (byte i = 0; i < strip.numPixels(); i++) strip.setPixelColor(i,255,0,0);
     }else if(indState == STATE_BLINK_HIGH){
-      for (byte i = 0; i < whatWattStrip.numPixels(); i++) whatWattStrip.setPixelColor(i,255,255,255);
+      for (byte i = 0; i < strip.numPixels(); i++) strip.setPixelColor(i,255,255,255);
     }
   }
 }
@@ -212,7 +215,7 @@ void doIndRamp(){
   unsigned char hue = ledstolight/NUM_POWER_PIXELS * 170.0;
   uint32_t color = Wheel(hue<1?1:hue);
   static const uint32_t dark = Adafruit_NeoPixel::Color(0,0,0);
-  doFractionalRamp(0, NUM_POWER_PIXELS, ledstolight, color, dark);
+  doFractionalRamp(PowerStrip, 0, NUM_POWER_PIXELS, ledstolight, color, dark);
 
   // the energy LEDs
   int full_smoothies = energy/MAX_ENERGY;
@@ -221,11 +224,12 @@ void doIndRamp(){
   if( ledstolight > NUM_ENERGY_PIXELS ) ledstolight=NUM_ENERGY_PIXELS;
   uint32_t curcolor = ENERGY_COLORS[full_smoothies%NUM_ENERGY_COLORS];
   uint32_t nextcolor = ENERGY_COLORS[(full_smoothies+1)%NUM_ENERGY_COLORS];
-  doBackwardsFractionalRamp(NUM_POWER_PIXELS, NUM_ENERGY_PIXELS,
-    ledstolight, nextcolor, curcolor );
+  // doBackwardsFractionalRamp(PowerStrip, NUM_POWER_PIXELS, ledstolight, nextcolor, curcolor ); // for chained strips
+  doFractionalRamp(EnergyStrip, 0, NUM_ENERGY_PIXELS, ledstolight, nextcolor, curcolor );
 
   // and show 'em
-  whatWattStrip.show();
+  PowerStrip.show();
+  EnergyStrip.show();
 }
 
 // hacky utility to merge colors
@@ -247,7 +251,7 @@ uint32_t weighted_average_of_colors( uint32_t colorA, uint32_t colorB,
     BA*fraction + BB*(1-fraction) );
 }
 
-void doFractionalRamp(uint8_t offset, uint8_t num_pixels, float ledstolight, uint32_t firstColor, uint32_t secondColor){
+void doFractionalRamp(Adafruit_NeoPixel &strip, uint8_t offset, uint8_t num_pixels, float ledstolight, uint32_t firstColor, uint32_t secondColor){
   for( int i=0,pixel=offset; i<=num_pixels; i++,pixel++ ){
     uint32_t color;
     if( i<(int)ledstolight )  // definitely firstColor
@@ -256,13 +260,13 @@ void doFractionalRamp(uint8_t offset, uint8_t num_pixels, float ledstolight, uin
         color = secondColor;
     else  // mix the two proportionally
         color = weighted_average_of_colors( firstColor, secondColor, ledstolight-(int)ledstolight);
-    whatWattStrip.setPixelColor(pixel, color);
+    strip.setPixelColor(pixel, color);
   }
 }
 
 // useful for the upside-down energy LEDs
-void doBackwardsFractionalRamp(uint8_t offset, uint8_t num_pixels, float ledstolight, uint32_t firstColor, uint32_t secondColor){
-  doFractionalRamp(offset, num_pixels, num_pixels-ledstolight, secondColor, firstColor);
+void doBackwardsFractionalRamp(Adafruit_NeoPixel &strip, uint8_t offset, uint8_t num_pixels, float ledstolight, uint32_t firstColor, uint32_t secondColor){
+  doFractionalRamp(strip, offset, num_pixels, num_pixels-ledstolight, secondColor, firstColor);
 }
 
 // Yay, a closed form solution, and it's even got meaningful parameters!
@@ -290,18 +294,19 @@ void doIndicators(){
   if(indState == STATE_RAMP){
     doIndRamp();
   } else {
-    doIndBlink();
+    doIndBlink(PowerStrip);
+    doIndBlink(EnergyStrip);
   }
 }
 
 void doButtonCheck() {
-  pinMode( WHATWATTPIN, INPUT_PULLUP );
+  pinMode( ENERGYLEDPIN, INPUT_PULLUP );
   delay(10); // Need some time between pinMode and digitalRead for stuff to settle.
-  if( ! digitalRead(WHATWATTPIN) ) { // button closes data line to ground
+  if( ! digitalRead(ENERGYLEDPIN) ) { // button closes data line to ground
     energy = 0; // reset energy
     Serial.println("resetEnergy");
   }
-  whatWattStrip.begin();
+  EnergyStrip.begin();
 }
 
 void doEnergy(){
