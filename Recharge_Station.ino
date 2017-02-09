@@ -381,7 +381,7 @@ void doLeds(){
       if (blinkState) { // make the lights blink
         voltLedStrip.setPixelColor(i,white);  // blinking white
       } else {
-        voltLedStrip.setPixelColor(i,dark);  // blinking dark
+        voltLedStrip.setPixelColor(i,red);  // blinking dark
       }
     } else { // voltage somewhere in between
       voltLedStrip.setPixelColor(i,dark);  // otherwise dark
@@ -414,7 +414,7 @@ void doLeds(){
       if (fastBlinkState) { // make the lights blink FAST
         voltLedStrip.setPixelColor(i,white);  // blinking white
       } else {
-        voltLedStrip.setPixelColor(i,dark);  // blinking dark
+        voltLedStrip.setPixelColor(i,red);  // blinking dark
       }
     }
   }
