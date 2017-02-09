@@ -421,7 +421,7 @@ uint32_t gasGaugeColor(int ledNum) {
   if (ledNum < 5) {
     return red;
   } else if (ledNum < 20) {
-    return blue;
+    return green;
   } else return white;
 }
 
