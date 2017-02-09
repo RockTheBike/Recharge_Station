@@ -397,8 +397,13 @@ void doLeds(){
       } else {
         lastLedLevel = nowLedLevel;
       }
-    for(i = 0; i < nowLedLevel; i++) {
-      voltLedStrip.setPixelColor(i,gasGaugeColor(i)); // gas gauge effect
+    for(i = 0; i < nowLedLevel; i++) { // gas gauge effect
+      if (nowLedLevel < 5) {
+        voltLedStrip.setPixelColor(i,red);
+      } else {
+        voltLedStrip.setPixelColor(i,green);
+      }
+      if (i >= 20) voltLedStrip.setPixelColor(i,white); // override with white for LEDs 20 and above
     }
   } else {
   lastLedLevel = 0; // don't confuse the hysteresis
@@ -416,14 +421,6 @@ void doLeds(){
 
   voltLedStrip.show(); // actually update the LED strip
 } // END doLeds()
-
-uint32_t gasGaugeColor(int ledNum) {
-  if (ledNum < 5) {
-    return red;
-  } else if (ledNum < 20) {
-    return green;
-  } else return white;
-}
 
 void getVolts(){
   voltsAdc = analogRead(VOLTPIN);
