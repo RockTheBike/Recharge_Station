@@ -25,7 +25,7 @@ Adafruit_NeoPixel whatWattStrip = Adafruit_NeoPixel(NUM_WHATWATTPIXELS, WHATWATT
 #define CAPSRELAY 3 // relay override inhibitor transistor
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
-#define NOISYZERO 0.2  // assume any smaller measurement should be 0
+#define NOISYZERO 0.5  // assume any smaller measurement should be 0
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_VOLTLEDS+1] = {
