@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 10 USB ports branch:whatwatt";
+char versionStr[] = "feeltheload utility box manages a 500w inverter & smart LED pedalometer branch:whatwatt";
 
 #include <Adafruit_NeoPixel.h>
 
