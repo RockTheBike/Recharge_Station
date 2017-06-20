@@ -24,6 +24,10 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 #define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
 #define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 #define CAPSRELAY 3 // relay override inhibitor transistor
+#define INVERTERRELAY 5 // relay to turn on AC inverter
+#define INVERTERCUTIN 24.0 // turn on inverter above this voltage
+#define INVERTERCUTOUT 22.0 // turn inverter off below this voltage
+#define INVERTER_WAITTIME 1000 // wait this long between switch flips
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
 #define NOISYZERO 0.5  // assume any smaller measurement should be 0
@@ -111,6 +115,7 @@ unsigned long timeDisplay = 0;
 unsigned long lastEnergy = 0;
 unsigned long lastButtonCheckTime = 0;
 unsigned long lastIndicatorTime = 0;
+unsigned long lastInverterTime = 0;
 int indState = STATE_RAMP;
 
 // var for looping through arrays
@@ -129,6 +134,7 @@ void setup() {
 
   pinMode(DISCORELAY, OUTPUT);
   pinMode(CAPSRELAY,OUTPUT);
+  pinMode(INVERTERRELAY,OUTPUT);
 
   voltLedStrip.begin(); // initialize the addressible LEDs
   voltLedStrip.show(); // clear their state
@@ -151,6 +157,7 @@ void loop() {
   time = millis();
   getVolts();
   doSafety();
+  doInverterSwitch();
 
   doBlink();  // blink the LEDs
   doLeds();
@@ -187,6 +194,18 @@ uint32_t Wheel(byte WheelPos) {
   } else {
     WheelPos -= 170;
     return Adafruit_NeoPixel::Color(WheelPos * 3, 0, 255 - WheelPos * 3);
+  }
+}
+
+void doInverterSwitch(){
+  if (millis() - lastInverterTime > INVERTER_WAITTIME) {
+    if (digitalRead(INVERTERRELAY) && (volts < INVERTERCUTOUT)) {
+      digitalWrite(INVERTERRELAY,LOW); // turn off inverter
+      lastInverterTime = millis();
+    } else if (! digitalRead(INVERTERRELAY) && (volts > INVERTERCUTIN)) {
+      digitalWrite(INVERTERRELAY,HIGH); // turn on inverter
+      lastInverterTime = millis();
+    }
   }
 }
 
