@@ -155,6 +155,7 @@ void setup() {
 
 void loop() {
   time = millis();
+  // if (Serial.available()) { volts = (float)Serial.parseInt() / 10.0; }
   getVolts();
   doSafety();
   doInverterSwitch();
