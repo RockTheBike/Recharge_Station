@@ -34,7 +34,7 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[12+1] = { // the pedalometer is four strips of 12 side by side...
-  22.0, 22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0 };
+  21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define OVERSAMPLING 25.0 // analog oversampling
@@ -146,7 +146,7 @@ void setup() {
   red = voltLedStrip.Color(ledBrightness,0,0); // load these handy Colors
   green = voltLedStrip.Color(0,ledBrightness,0);
   blue = voltLedStrip.Color(0,0,ledBrightness);
-  white = voltLedStrip.Color(ledBrightness,ledBrightness,ledBrightness);
+  white = voltLedStrip.Color(ledBrightness,ledBrightness/2,ledBrightness/4);
   dark = voltLedStrip.Color(0,0,0);
 
   timeDisplay = millis();
@@ -417,7 +417,7 @@ void doLeds(){
     }
   }
 
-  if (nowLedLevel > 0) { // gas gauge in effect
+  if (nowLedLevel > 0 && volts < ledLevels[12]) { // gas gauge in effect
     if ((volts + LEDLEVELHYSTERESIS > ledLevels[nowLedLevel]) && (lastLedLevel == nowLedLevel+1)) {
         nowLedLevel = lastLedLevel;
       } else {
@@ -425,8 +425,8 @@ void doLeds(){
       }
     uint32_t pixelColor;
     for(i = 0; i < nowLedLevel; i++) { // gas gauge effect
-      if (nowLedLevel < 5) {
-        if ((millis() % 1500) > 500) { // blinking red
+      if (nowLedLevel < 6) {
+        if ((millis() % 1000) > 300) { // blinking red
           pixelColor = red;
         } else {
           pixelColor = dark;
