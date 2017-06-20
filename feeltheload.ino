@@ -20,8 +20,8 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 #define IND_VOLT_HIGH 30.0 // handlebar pedalometer blinks white
 #define ledBrightness 127 // brightness of addressible LEDs (0 to 255)
 
-#define VOLTS_CUTOUT 10 // disconnect from the ultracaps below this voltage
-#define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
+#define VOLTS_CUTOUT 20 // disconnect from the ultracaps below this voltage
+#define VOLTS_CUTIN 22 // engage ultracap relay above this voltage
 #define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 #define CAPSRELAY 3 // relay override inhibitor transistor
 #define INVERTERRELAY 5 // relay to turn on AC inverter
@@ -33,8 +33,8 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 #define NOISYZERO 0.5  // assume any smaller measurement should be 0
 
 // levels at which each LED turns green (normally all red unless below first voltage)
-const float ledLevels[NUM_VOLTLEDS+1] = {
-  10.2, 10.6, 11.05, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 };
+const float ledLevels[12+1] = { // the pedalometer is four strips of 12 side by side...
+  22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0, 28.5 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define OVERSAMPLING 25.0 // analog oversampling
@@ -79,11 +79,11 @@ uint32_t ENERGY_COLORS[] = {
 #define STATE_BLINK_HIGH 3
 #define STATE_RAMP 4
 
-#define MAX_VOLTS 32.4 // when to open the safety relay
-#define RECOVERY_VOLTS 28.4 // when to close the safety relay
+#define MAX_VOLTS 28.0 // when to open the safety relay
+#define RECOVERY_VOLTS 26.0 // when to close the safety relay
 int relayState = STATE_OFF;
 
-#define DANGER_VOLTS 33.0  // when to fast-flash white (slow-flash above last ledLevels)
+#define DANGER_VOLTS 29.0  // when to fast-flash white (slow-flash above last ledLevels)
 int dangerState = STATE_OFF;
 
 int blinkState = 0;
