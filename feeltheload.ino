@@ -25,7 +25,7 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 #define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 #define CAPSRELAY 3 // relay override inhibitor transistor
 #define INVERTERRELAY 5 // relay to turn on AC inverter
-#define INVERTERCUTIN 24.0 // turn on inverter above this voltage
+#define INVERTERCUTIN 23.5 // turn on inverter above this voltage
 #define INVERTERCUTOUT 22.0 // turn inverter off below this voltage
 #define INVERTER_WAITTIME 2000 // wait this long between switch flips
 #define VOLTPIN A0 // Voltage Sensor Pin
@@ -80,7 +80,7 @@ uint32_t ENERGY_COLORS[] = {
 #define STATE_RAMP 4
 
 #define MAX_VOLTS 28.0 // when to open the safety relay
-#define RECOVERY_VOLTS 26.0 // when to close the safety relay
+#define RECOVERY_VOLTS 23.0 // when to close the safety relay
 int relayState = STATE_OFF;
 
 #define DANGER_VOLTS 29.0  // when to fast-flash white (slow-flash above last ledLevels)
