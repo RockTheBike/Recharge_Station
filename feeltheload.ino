@@ -5,7 +5,7 @@ char versionStr[] = "feeltheload utility box manages a 500w inverter & smart LED
 #include <Adafruit_NeoPixel.h>
 
 #define VOLTLEDSTRIPPIN 13 // what pin the data input to the voltage LED strip is connected to
-#define NUM_VOLTLEDS 22 // how many LEDs on the strip
+#define NUM_VOLTLEDS 48 // how many LEDs on the strip
 Adafruit_NeoPixel voltLedStrip = Adafruit_NeoPixel(NUM_VOLTLEDS, VOLTLEDSTRIPPIN, NEO_GRB + NEO_KHZ800);
 
 #define POWERLEDPIN 12 // what pin the WhatWatt POWER pedalometer is connected to
@@ -34,7 +34,7 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[12+1] = { // the pedalometer is four strips of 12 side by side...
-  22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0, 28.5 };
+  22.0, 22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define OVERSAMPLING 25.0 // analog oversampling
@@ -421,13 +421,18 @@ void doLeds(){
       } else {
         lastLedLevel = nowLedLevel;
       }
+    uint32_t pixelColor;
     for(i = 0; i < nowLedLevel; i++) { // gas gauge effect
       if (nowLedLevel < 5) {
-        voltLedStrip.setPixelColor(i,red);
+        pixelColor = red;
       } else {
-        voltLedStrip.setPixelColor(i,green);
+        pixelColor = green;
       }
-      if (i >= 20) voltLedStrip.setPixelColor(i,white); // override with white for LEDs 20 and above
+      if (i >= 20) pixelColor = white; // override with white for LEDs 20 and above
+      voltLedStrip.setPixelColor(i,pixelColor);
+      voltLedStrip.setPixelColor(23-i,pixelColor);
+      voltLedStrip.setPixelColor(24+i,pixelColor);
+      voltLedStrip.setPixelColor(47-i,pixelColor);
     }
   } else {
   lastLedLevel = 0; // don't confuse the hysteresis
@@ -438,7 +443,7 @@ void doLeds(){
       if (fastBlinkState) { // make the lights blink FAST
         voltLedStrip.setPixelColor(i,white);  // blinking white
       } else {
-        voltLedStrip.setPixelColor(i,red);  // blinking dark
+        voltLedStrip.setPixelColor(i,green);  // blinking red
       }
     }
   }
