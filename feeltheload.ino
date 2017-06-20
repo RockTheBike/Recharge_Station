@@ -399,17 +399,18 @@ void doBlink(){
 void doLeds(){
 
   nowLedLevel = 0; // init value for this round
-  for(i = 0; i < NUM_VOLTLEDS; i++) { // go through all but the last voltage in ledLevels[]
+  for(char ledNum = 0; ledNum < NUM_VOLTLEDS; ledNum++) { // go through all but the last voltage in ledLevels[]
+    i = ledNum % 12; // there are four rows of 12 leds and this is a dumb hack
     if (volts < ledLevels[0]) { // if voltage below minimum
-      voltLedStrip.setPixelColor(i,dark);  // all lights out
-    } else if (volts > ledLevels[NUM_VOLTLEDS]) { // if voltage beyond highest level
+      voltLedStrip.setPixelColor(ledNum,dark);  // all lights out
+    } else if (volts > ledLevels[12]) { // if voltage beyond highest level
       if (blinkState) { // make the lights blink
-        voltLedStrip.setPixelColor(i,white);  // blinking white
+        voltLedStrip.setPixelColor(ledNum,white);  // blinking white
       } else {
-        voltLedStrip.setPixelColor(i,red);  // blinking dark
+        voltLedStrip.setPixelColor(ledNum,red);  // blinking red
       }
     } else { // voltage somewhere in between
-      voltLedStrip.setPixelColor(i,dark);  // otherwise dark
+      voltLedStrip.setPixelColor(ledNum,dark);  // otherwise dark
       if (volts > ledLevels[i]) { // but if enough voltage
         nowLedLevel = i+1; // store what level we light up to
       }
