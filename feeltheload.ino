@@ -27,7 +27,7 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 #define INVERTERRELAY 5 // relay to turn on AC inverter
 #define INVERTERCUTIN 24.0 // turn on inverter above this voltage
 #define INVERTERCUTOUT 22.0 // turn inverter off below this voltage
-#define INVERTER_WAITTIME 1000 // wait this long between switch flips
+#define INVERTER_WAITTIME 2000 // wait this long between switch flips
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
 #define NOISYZERO 0.5  // assume any smaller measurement should be 0
@@ -199,14 +199,11 @@ uint32_t Wheel(byte WheelPos) {
 }
 
 void doInverterSwitch(){
-  if (millis() - lastInverterTime > INVERTER_WAITTIME) {
-    if (digitalRead(INVERTERRELAY) && (volts < INVERTERCUTOUT)) {
-      digitalWrite(INVERTERRELAY,LOW); // turn off inverter
-      lastInverterTime = millis();
-    } else if (! digitalRead(INVERTERRELAY) && (volts > INVERTERCUTIN)) {
-      digitalWrite(INVERTERRELAY,HIGH); // turn on inverter
-      lastInverterTime = millis();
-    }
+  if (digitalRead(INVERTERRELAY) && (volts < INVERTERCUTOUT)) {
+    digitalWrite(INVERTERRELAY,LOW); // turn off inverter
+    lastInverterTime = millis();
+  } else if (! digitalRead(INVERTERRELAY) && (volts > INVERTERCUTIN) && (millis() - lastInverterTime > INVERTER_WAITTIME) ) {
+    digitalWrite(INVERTERRELAY,HIGH); // turn on inverter
   }
 }
 
