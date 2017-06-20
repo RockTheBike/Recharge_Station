@@ -445,7 +445,7 @@ void doLeds(){
       if (fastBlinkState) { // make the lights blink FAST
         voltLedStrip.setPixelColor(i,white);  // blinking white
       } else {
-        voltLedStrip.setPixelColor(i,green);  // blinking red
+        voltLedStrip.setPixelColor(i,red);  // blinking red
       }
     }
   }
