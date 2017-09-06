@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 10 USB ports branch:whatwatt";
+char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 10 USB ports with an extra pin for 20W Auxiliary LED for strong pedalers. branch:whatwatt";
 
 #include <Adafruit_NeoPixel.h>
 
@@ -20,10 +20,12 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 #define IND_VOLT_HIGH 26.0 // handlebar pedalometer blinks white
 #define ledBrightness 127 // brightness of addressible LEDs (0 to 255)
 
+#define AUXLED_ON_POINT 24
 #define VOLTS_CUTOUT 10 // disconnect from the ultracaps below this voltage
 #define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
 #define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 #define CAPSRELAY 3 // relay override inhibitor transistor
+#define AUXLEDPIN 7 // relay override inhibitor transistor
 #define VOLTPIN A0 // Voltage Sensor Pin
 #define AMPSPIN A3 // Current Sensor Pin
 #define NOISYZERO 0.5  // assume any smaller measurement should be 0
@@ -129,6 +131,7 @@ void setup() {
 
   pinMode(DISCORELAY, OUTPUT);
   pinMode(CAPSRELAY,OUTPUT);
+  pinMode(AUXLEDPIN,OUTPUT);
 
   voltLedStrip.begin(); // initialize the addressible LEDs
   voltLedStrip.show(); // clear their state
@@ -154,6 +157,16 @@ void loop() {
 
   doBlink();  // blink the LEDs
   doLeds();
+
+if(volts >= AUXLED_ON_POINT) {
+ //turn on the AUX LEDS
+ digitalWrite(AUXLEDPIN,HIGH);
+   Serial.println("Turning on 100W of extra load for this strong pedaler.");
+} else if (volts < (AUXLED_ON_POINT-1)) {
+  digitalWrite((AUXLEDPIN),LOW);
+
+   Serial.println("Turning off 100W of extra load because pedaler doesn't want it anymore.");
+}
 
   if(time - timeDisplay > DISPLAY_INTERVAL){
     printDisplay();
