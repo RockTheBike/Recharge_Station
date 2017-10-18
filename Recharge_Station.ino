@@ -134,10 +134,13 @@ void setup() {
   pinMode(AUXLEDPIN,OUTPUT);
 
   voltLedStrip.begin(); // initialize the addressible LEDs
+  for (byte i = 0; i < voltLedStrip.numPixels(); i++) voltLedStrip.setPixelColor(i,1,1,1);
   voltLedStrip.show(); // clear their state
   EnergyStrip.begin(); // initialize the addressible LEDs
+  for (byte i = 0; i < EnergyStrip.numPixels(); i++) EnergyStrip.setPixelColor(i,1,1,1);
   EnergyStrip.show(); // clear their state
   PowerStrip.begin(); // initialize the addressible LEDs
+  for (byte i = 0; i < PowerStrip.numPixels(); i++) PowerStrip.setPixelColor(i,1,1,1);
   PowerStrip.show(); // clear their state
 
   red = voltLedStrip.Color(ledBrightness,0,0); // load these handy Colors
