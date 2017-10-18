@@ -159,13 +159,11 @@ void loop() {
   doLeds();
 
 if(volts >= AUXLED_ON_POINT) {
- //turn on the AUX LEDS
- digitalWrite(AUXLEDPIN,HIGH);
-   Serial.println("Turning on 100W of extra load for this strong pedaler.");
+  if (! digitalRead(AUXLEDPIN)) Serial.println("Turning on 100W of extra load for this strong pedaler.");
+  digitalWrite(AUXLEDPIN,HIGH);
 } else if (volts < (AUXLED_ON_POINT-1)) {
+  if (digitalRead(AUXLEDPIN)) Serial.println("Turning off 100W of extra load because pedaler doesn't want it anymore.");
   digitalWrite((AUXLEDPIN),LOW);
-
-   Serial.println("Turning off 100W of extra load because pedaler doesn't want it anymore.");
 }
 
   if(time - timeDisplay > DISPLAY_INTERVAL){
