@@ -1,6 +1,6 @@
 #define BAUD_RATE 57600
 
-char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 10 USB ports with an extra pin for 20W Auxiliary LED for strong pedalers. branch:whatwatt";
+char versionStr[] = "Recharge_Station standalone external whatwatt display. branch:extwhatwatt";
 
 #include <Adafruit_NeoPixel.h>
 
@@ -10,8 +10,8 @@ Adafruit_NeoPixel voltLedStrip = Adafruit_NeoPixel(NUM_VOLTLEDS, VOLTLEDSTRIPPIN
 
 #define POWERLEDPIN 12 // what pin the WhatWatt POWER pedalometer is connected to
 #define ENERGYLEDPIN 11 // what pin the WhatWatt ENERGY pedalometer is connected to
-#define NUM_POWER_PIXELS 17  // number LEDs for power
-#define NUM_ENERGY_PIXELS 17  // number LEDs for energy
+#define NUM_POWER_PIXELS 106  // number LEDs for power
+#define NUM_ENERGY_PIXELS 3  // number LEDs for energy
 Adafruit_NeoPixel PowerStrip = Adafruit_NeoPixel(NUM_POWER_PIXELS, POWERLEDPIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPIN, NEO_GRB + NEO_KHZ800);
 
