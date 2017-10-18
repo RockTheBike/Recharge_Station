@@ -92,7 +92,7 @@ int nowLedLevel = 0; // for LED strip
 
 #define VOLTCOEFF 13.36  // larger number interprets as lower voltage
 #define AMPCOEFF 9.817 // 583 - 512 = 71; 71 / 8.8 amps = 8.0682
-#define AMPOFFSET 510.6 // when current sensor is at 0 amps this is the ADC value
+#define AMPOFFSET 508 // when current sensor is at 0 amps this is the ADC value
 
 int voltsAdc = 0;
 float voltsAdcAvg = 0;
