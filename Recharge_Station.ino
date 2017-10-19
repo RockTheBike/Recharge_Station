@@ -16,8 +16,8 @@ Adafruit_NeoPixel PowerStrip = Adafruit_NeoPixel(NUM_POWER_PIXELS, POWERLEDPIN, 
 Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPIN, NEO_GRB + NEO_KHZ800);
 
 #define IND_BLINK_INTERVAL 300
-#define IND_VOLT_LOW 11 // handlebar pedalometer blinks red
-#define IND_VOLT_HIGH 26.0 // handlebar pedalometer blinks white
+#define IND_VOLT_LOW 6 // handlebar pedalometer blinks red
+#define IND_VOLT_HIGH 36.0 // handlebar pedalometer blinks white
 #define ledBrightness 127 // brightness of addressible LEDs (0 to 255)
 
 #define AUXLED_ON_POINT 24
@@ -77,11 +77,11 @@ uint32_t ENERGY_COLORS[] = {
 #define STATE_BLINK_HIGH 3
 #define STATE_RAMP 4
 
-#define MAX_VOLTS 27  // when to open the safety relay
-#define RECOVERY_VOLTS 23  // when to close the safety relay
+#define MAX_VOLTS 30  // when to open the safety relay
+#define RECOVERY_VOLTS 28  // when to close the safety relay
 int relayState = STATE_OFF;
 
-#define DANGER_VOLTS 28.0  // when to fast-flash white (slow-flash above last ledLevels)
+#define DANGER_VOLTS 32.0  // when to fast-flash white (slow-flash above last ledLevels)
 int dangerState = STATE_OFF;
 
 int blinkState = 0;
