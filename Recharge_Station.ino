@@ -91,8 +91,8 @@ int nowLedLevel = 0; // for LED strip
 #define LEDLEVELHYSTERESIS 0.6 // how many volts of hysteresis for gas gauge
 
 #define VOLTCOEFF 13.36  // larger number interprets as lower voltage
-#define AMPCOEFF 12.4 // 583 - 512 = 71; 71 / 8.8 amps = 8.0682
-#define AMPOFFSET 119 // when current sensor is at 0 amps this is the ADC value
+#define AMPCOEFF 13.05  // PLUSOUT = OUTPUT, PLUSRAIL = PEDAL INPUT
+#define AMPOFFSET 118 // when current sensor is at 0 amps this is the ADC value
 
 int voltsAdc = 0;
 float voltsAdcAvg = 0;
@@ -330,7 +330,7 @@ void doEnergy(){
   // measure amps and calc energy
   ampsRaw = 0; // reset adder
   for(int j = 0; j < OVERSAMPLING; j++) ampsRaw += analogRead(AMPSPIN) - AMPOFFSET;
-  amps = ((float)ampsRaw / OVERSAMPLING) / AMPCOEFF * -1; // it's negative
+  amps = ((float)ampsRaw / OVERSAMPLING) / AMPCOEFF; // PLUSOUT = OUTPUT, PLUSRAIL = PEDAL INPUT
   // we assume anything near or below zero is a reading error
   if( amps < NOISYZERO ) amps = 0;
 
