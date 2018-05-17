@@ -14,6 +14,8 @@ Adafruit_NeoPixel voltLedStrip = Adafruit_NeoPixel(NUM_VOLTLEDS, VOLTLEDSTRIPPIN
 #define NUM_ENERGY_PIXELS 17  // number LEDs for energy
 Adafruit_NeoPixel PowerStrip = Adafruit_NeoPixel(NUM_POWER_PIXELS, POWERLEDPIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPIN, NEO_GRB + NEO_KHZ800);
+#define TRIANGLEPIN 10
+Adafruit_NeoPixel TriangleStrip = Adafruit_NeoPixel(36,TRIANGLEPIN, NEO_GRB + NEO_KHZ800);
 
 #define IND_BLINK_INTERVAL 300
 #define IND_VOLT_LOW 11 // handlebar pedalometer blinks red
@@ -142,6 +144,10 @@ void setup() {
   PowerStrip.begin(); // initialize the addressible LEDs
   for (byte i = 0; i < PowerStrip.numPixels(); i++) PowerStrip.setPixelColor(i,1,1,1);
   PowerStrip.show(); // clear their state
+  TriangleStrip.begin(); // initialize the addressible LEDs
+  for (byte i = 0; i < TriangleStrip.numPixels(); i++) TriangleStrip.setPixelColor(i,1,1,1);
+  TriangleStrip.setBrightness(64);
+  TriangleStrip.show(); // clear their state
 
   red = voltLedStrip.Color(ledBrightness,0,0); // load these handy Colors
   green = voltLedStrip.Color(0,ledBrightness,0);
@@ -160,6 +166,7 @@ void loop() {
 
   doBlink();  // blink the LEDs
   doLeds();
+  doTriangle(); // light up the power triangle
 
 if(volts >= AUXLED_ON_POINT) {
   if (! digitalRead(AUXLEDPIN)) Serial.println("Turning on 100W of extra load for this strong pedaler.");
@@ -388,6 +395,83 @@ void doBlink(){
     timeFastBlink = time;
   }
 
+}
+
+#define RAINBOW_SPEED 8 // lower number is faster rainbow flow
+void doTriangle(){
+#define ANIMRATE 1000 // how many milliseconds the chase animation takes
+  static uint32_t rowColor[9];
+  watts = analogRead(A4) / 10; // use the knob to fake power
+  byte deciwatt = (byte)(watts / 10); // deciwatt is 1 for 0-9 watts, 2 for 10-19 watts...
+  if (watts < 60) {
+    for (int i = 0; i < 6; i++) {
+      if ((i+1 == ( (time % ANIMRATE) / (ANIMRATE / (deciwatt + 2)))) || (i == deciwatt)) { // cycle through 0 and all the levels to deciwatt
+        for (uint16_t p = i*4; p < (i*4+4); p++) TriangleStrip.setPixelColor(p,green);
+      } else {
+        for (uint16_t p = i*4; p < (i*4+4); p++) TriangleStrip.setPixelColor(p,dark);
+      }
+    }
+  } else if (watts >= 60 && watts < 70) {
+    for (int i = 0; i < 6; i++) for (uint16_t p = i*4; p < (i*4+4); p++) setPixelHSV(TriangleStrip, p, (millis()/RAINBOW_SPEED%256+(5-i)*24)%256,255,255);
+    for (uint16_t p = 6*4; p < (6*4+4); p++) TriangleStrip.setPixelColor(p,white);
+    for (uint16_t p = 36-8; p < 36; p++) setPixelHSV(TriangleStrip, p, (millis()/RAINBOW_SPEED%256+p*18)%256,255,255);
+  } else if (watts >= 70) {
+  }
+  TriangleStrip.show();
+}
+
+void setPixelHSV(Adafruit_NeoPixel& strip, uint16_t pixel, int hue, int sat, int val) {
+  int colors[3];
+  HSVtoRGB(hue,sat,val,colors);
+  strip.setPixelColor(pixel,colors[0],colors[1],colors[2]);
+}
+
+void HSVtoRGB(int hue, int sat, int val, int colors[3]) { // hue: 0-359, sat: 0-255, val (lightness): 0-255
+  int r, g, b, base;
+
+  if (sat == 0) { // achromatic color (gray).
+    colors[0]=val;
+    colors[1]=val;
+    colors[2]=val;
+  }
+  else  {
+    base = ((255 - sat) * val)>>8;
+    switch(hue/60) {
+    case 0:
+      r = val;
+      g = (((val-base)*hue)/60)+base;
+      b = base;
+      break;
+    case 1:
+      r = (((val-base)*(60-(hue%60)))/60)+base;
+      g = val;
+      b = base;
+      break;
+    case 2:
+      r = base;
+      g = val;
+      b = (((val-base)*(hue%60))/60)+base;
+      break;
+    case 3:
+      r = base;
+      g = (((val-base)*(60-(hue%60)))/60)+base;
+      b = val;
+      break;
+    case 4:
+      r = (((val-base)*(hue%60))/60)+base;
+      g = base;
+      b = val;
+      break;
+    case 5:
+      r = val;
+      g = base;
+      b = (((val-base)*(60-(hue%60)))/60)+base;
+      break;
+    }
+    colors[0]=r;
+    colors[1]=g;
+    colors[2]=b;
+  }
 }
 
 void doLeds(){
