@@ -397,7 +397,7 @@ void doBlink(){
 
 }
 
-#define RAINBOW_SPEED 8 // lower number is faster rainbow flow
+#define RAINBOW_SPEED 5 // lower number is faster rainbow flow
 void doTriangle(){
 #define ANIMRATE 1000 // how many milliseconds the chase animation takes
   static uint32_t rowColor[9];
@@ -410,12 +410,23 @@ void doTriangle(){
       } else {
         for (uint16_t p = i*4; p < (i*4+4); p++) TriangleStrip.setPixelColor(p,dark);
       }
+    for (uint16_t p = 36-12; p < 36; p++) TriangleStrip.setPixelColor(p,dark); // turn off the rest of the lights
     }
   } else if (watts >= 60 && watts < 70) {
     for (int i = 0; i < 6; i++) for (uint16_t p = i*4; p < (i*4+4); p++) setPixelHSV(TriangleStrip, p, (millis()/RAINBOW_SPEED%256+(5-i)*24)%256,255,255);
     for (uint16_t p = 6*4; p < (6*4+4); p++) TriangleStrip.setPixelColor(p,white);
     for (uint16_t p = 36-8; p < 36; p++) setPixelHSV(TriangleStrip, p, (millis()/RAINBOW_SPEED%256+p*18)%256,255,255);
   } else if (watts >= 70) {
+    for (uint16_t p = 0; p < 36; p++) TriangleStrip.setPixelColor(p,dark); // turn off the rest of the lights
+    uint16_t pixelNum = constrain((watts - 70)/3+28,28,35);
+    for (int p = pixelNum; p < 36; p++) {
+      if (35 - p == ( (time % ANIMRATE) / (ANIMRATE / (36 - pixelNum)))) { // cycle through 0 and all the levels to deciwatt
+        TriangleStrip.setPixelColor(p,red);
+      } else {
+        TriangleStrip.setPixelColor(p,dark);
+      }
+      TriangleStrip.setPixelColor(pixelNum,red * (millis() % BLINK_PERIOD > BLINK_PERIOD / 2));
+    }
   }
   TriangleStrip.show();
 }
