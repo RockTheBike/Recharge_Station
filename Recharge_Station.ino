@@ -5,7 +5,7 @@ char versionStr[] = "Recharge_station which allows up to 29.0V down to 10V for 1
 #include <Adafruit_NeoPixel.h>
 
 #define VOLTLEDSTRIPPIN 13 // what pin the data input to the voltage LED strip is connected to
-#define NUM_VOLTLEDS 22 // how many LEDs on the strip
+#define NUM_VOLTLEDS 14 // how many LEDs on the strip
 Adafruit_NeoPixel voltLedStrip = Adafruit_NeoPixel(NUM_VOLTLEDS, VOLTLEDSTRIPPIN, NEO_GRB + NEO_KHZ800);
 
 #define POWERLEDPIN 12 // what pin the WhatWatt POWER pedalometer is connected to
@@ -16,13 +16,14 @@ Adafruit_NeoPixel PowerStrip = Adafruit_NeoPixel(NUM_POWER_PIXELS, POWERLEDPIN, 
 Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPIN, NEO_GRB + NEO_KHZ800);
 
 #define IND_BLINK_INTERVAL 300
-#define IND_VOLT_LOW 11 // handlebar pedalometer blinks red
-#define IND_VOLT_HIGH 26.0 // handlebar pedalometer blinks white
+#define IND_VOLT_LOW 17 // handlebar pedalometer blinks red
+#define IND_VOLT_HIGH 34.0 // handlebar pedalometer blinks white
 #define ledBrightness 127 // brightness of addressible LEDs (0 to 255)
 
-#define AUXLED_ON_POINT 24
-#define VOLTS_CUTOUT 10 // disconnect from the ultracaps below this voltage
-#define VOLTS_CUTIN 12 // engage ultracap relay above this voltage
+#define AUXLED_ON_POINT 33 // could hook up a warning system of some kind
+// volts_cut* and capsrelay are for dropstop system
+#define VOLTS_CUTOUT 15 // disconnect from the ultracaps below this voltage
+#define VOLTS_CUTIN 17 // engage ultracap relay above this voltage
 #define DISCORELAY 2 // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 #define CAPSRELAY 3 // relay override inhibitor transistor
 #define AUXLEDPIN 7 // relay override inhibitor transistor
@@ -32,7 +33,7 @@ Adafruit_NeoPixel EnergyStrip = Adafruit_NeoPixel(NUM_ENERGY_PIXELS, ENERGYLEDPI
 
 // levels at which each LED turns green (normally all red unless below first voltage)
 const float ledLevels[NUM_VOLTLEDS+1] = {
-  10.2, 10.6, 11.05, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 };
+  15, 16.4, 17.8, 19.2, 20.6, 22, 23.4, 24.8, 26.2, 27.6, 29, 30.4, 31.8, 33.2, 34.6 };
 
 #define AVG_CYCLES 50 // average measured values over this many samples
 #define OVERSAMPLING 25.0 // analog oversampling
@@ -77,11 +78,11 @@ uint32_t ENERGY_COLORS[] = {
 #define STATE_BLINK_HIGH 3
 #define STATE_RAMP 4
 
-#define MAX_VOLTS 27  // when to open the safety relay
-#define RECOVERY_VOLTS 23  // when to close the safety relay
+#define MAX_VOLTS 35.1 // 13 CAPS when to open the safety relay
+#define RECOVERY_VOLTS 30  // when to close the safety relay
 int relayState = STATE_OFF;
 
-#define DANGER_VOLTS 28.0  // when to fast-flash white (slow-flash above last ledLevels)
+#define DANGER_VOLTS 36.0  // when to fast-flash white (slow-flash above last ledLevels)
 int dangerState = STATE_OFF;
 
 int blinkState = 0;
